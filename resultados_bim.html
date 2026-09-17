@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Diagnóstico de Líderes - Equipo BIM</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Password Lock Screen */
+        .lock-screen {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 400px;
+            margin: 80px auto;
+            text-align: center;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+        }
+
+        .lock-screen h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: var(--accent-cyan);
+        }
+
+        .lock-screen p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .lock-screen input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+            background: #0f172a;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .lock-screen button {
+            width: 100%;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            margin-bottom: 24px;
+        }
+
+        .dash-header h1 {
+            font-size: 22px;
+            color: var(--accent-cyan);
+        }
+
+        .dash-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .refresh-btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .grid-leaders {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+
+        .leader-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            padding: 24px;
+            position: relative;
+        }
+
+        .leader-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .leader-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .badge-status {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-complete {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .archetype-box {
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-cyan);
+            margin-bottom: 16px;
+        }
+
+        .archetype-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .archetype-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin-bottom: 4px;
+        }
+
+        .archetype-desc {
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .ans-item {
+            background: #0f172a;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid var(--card-border);
+        }
+
+        .ans-item span {
+            display: block;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .strategy-box {
+            background: #1e1b4b;
+            border: 1px solid #4338ca;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .strategy-box h4 {
+            color: #a5b4fc;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .strategy-box p {
+            color: #e0e7ff;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Lock Screen -->
+    <div class="lock-screen" id="lockScreen">
+        <h2>Acceso Exclusivo BIM</h2>
+        <p>Introduce la contraseña del equipo para ver el diagnóstico de los Líderes:</p>
+        <input type="password" id="passInput" placeholder="Contraseña">
+        <button onclick="checkPass()">Ingresar al Dashboard</button>
+        <p id="errorMsg" style="color:#ef4444; margin-top:10px; display:none;">Contraseña incorrecta (Usa: bim2026)</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard" id="dashboard">
+        <a href="index.html" class="back-link">← Volver al formulario de evaluación</a>
+        
+        <div class="dash-header">
+            <div>
+                <h1>Diagnóstico de Liderazgo y Adopción BIM</h1>
+                <p>Análisis de conductas de decisión para los 4 Líderes de Arquitectura</p>
+            </div>
+            <button class="refresh-btn" onclick="renderDashboard()">🔄 Actualizar Resultados</button>
+        </div>
+
+        <div class="grid-leaders" id="leadersGrid">
+            <!-- Dynamically Rendered -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwK5u5eWebHhjdFOVV9xQP7y8gAHm9DY0_hw5oMhH-4NFmOla_YA98xKRuHUKc1X8SX/exec";
+
+    const ARCHETYPES_MAP = {
+        'A': {
+            name: 'El Pragmático / Apagafuegos',
+            desc: 'Prioriza la velocidad de respuesta y la resolución inmediata de entregas u obra.',
+            pain: 'Teme que la burocracia del modelo 3D lo haga quedar mal con el cliente o la obra.',
+            strategy: 'Demostrarle velocidad y simplificación. Ofrecerle un flujo Fast-Track de publicación directa sin pasos pesados.'
+        },
+        'B': {
+            name: 'El Riguroso / Perfeccionista',
+            desc: 'Prioriza el control de calidad, la precisión de datos y la integridad del proyecto.',
+            pain: 'Le frustra la falta de disciplina técnica y la presión externa por recortar procesos.',
+            strategy: 'Demostrarle control y trazabilidad. Apoyarle con automatizaciones para auditoría rápida de maquetas y vistas.'
+        },
+        'C': {
+            name: 'El Híbrido / Adaptativo',
+            desc: 'Busca el equilibrio entre esfuerzo y resultado mediante parches funcionales 2D/3D.',
+            pain: 'Siente que las herramientas 3D no son lo suficientemente ágiles para cambios iterativos rápidos.',
+            strategy: 'Ofrecerle plantillas de modelado rápido para cambios de diseño y estandarización de vistas para exportación.'
+        },
+        'D': {
+            name: 'El Colaborador / Gestor de Riesgo',
+            desc: 'Prioriza la protección de la capacidad de su equipo y la delegación de cargas.',
+            pain: 'Teme saturar a sus proyectistas y percibe falta de brazos/competencias técnicas en 3D.',
+            strategy: 'Ofrecer acompañamiento técnico directo del equipo BIM para su personal sin fiscalización ni juicios.'
+        }
+    };
+
+    function checkPass() {
+        const pass = document.getElementById('passInput').value;
+        if (pass === 'bim2026') {
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            renderDashboard();
+        } else {
+            document.getElementById('errorMsg').style.display = 'block';
+        }
+    }
+
+    async function renderDashboard() {
+        const grid = document.getElementById('leadersGrid');
+        grid.innerHTML = '<p style="color:var(--text-muted);">Cargando resultados desde Google Sheets...</p>';
+
+        const leaders = [
+            "Líder 1 - Arquitectura",
+            "Líder 2 - Arquitectura",
+            "Líder 3 - Arquitectura",
+            "Líder 4 - Arquitectura"
+        ];
+
+        let storedData = {};
+        try {
+            const resp = await fetch(SCRIPT_URL);
+            storedData = await resp.json();
+        } catch (err) {
+            console.error("Error al obtener respuestas:", err);
+        }
+
+        grid.innerHTML = '';
+
+        leaders.forEach(leader => {
+            const data = storedData[leader];
+            const card = document.createElement('div');
+            card.className = 'leader-card';
+
+            if (!data) {
+                card.innerHTML = `
+                    <div class="leader-head">
+                        <div class="leader-name">${leader}</div>
+                        <span class="badge-status status-pending">Pendiente</span>
+                    </div>
+                    <p style="font-size:13px; color: var(--text-muted); font-style:italic;">
+                        El líder aún no ha completado el simulador de toma de decisiones.
+                    </p>
+                `;
+            } else {
+                const ans = data.answers;
+                const counts = { A: 0, B: 0, C: 0, D: 0 };
+                if (ans.e1) counts[ans.e1]++;
+                if (ans.e2) counts[ans.e2]++;
+                if (ans.e3) counts[ans.e3]++;
+                if (ans.e4) counts[ans.e4]++;
+
+                let dominant = 'A';
+                let max = 0;
+                for (let k in counts) {
+                    if (counts[k] > max) {
+                        max = counts[k];
+                        dominant = k;
+                    }
+                }
+
+                const arch = ARCHETYPES_MAP[dominant];
+
+                card.innerHTML = `
+                    <div class="leader-head">
+                        <div>
+                            <div class="leader-name">${leader}</div>
+                            <span style="font-size:11px; color:var(--text-muted)">Respondido: ${data.timestamp}</span>
+                        </div>
+                        <span class="badge-status status-complete">Completado</span>
+                    </div>
+
+                    <div class="archetype-box">
+                        <div class="archetype-title">Arquetipo Predominante Diagnóstico</div>
+                        <div class="archetype-name">${arch.name}</div>
+                        <div class="archetype-desc">${arch.desc}</div>
+                    </div>
+
+                    <div class="section-title">Respuestas por Escenario</div>
+                    <div class="answers-grid">
+                        <div class="ans-item"><span>Escenario 1</span><strong>${ans.e1 || '-'}</strong></div>
+                        <div class="ans-item"><span>Escenario 2</span><strong>${ans.e2 || '-'}</strong></div>
+                        <div class="ans-item"><span>Escenario 3</span><strong>${ans.e3 || '-'}</strong></div>
+                        <div class="ans-item"><span>Escenario 4</span><strong>${ans.e4 || '-'}</strong></div>
+                    </div>
+
+                    <div style="margin-bottom:12px; font-size:12px; color:var(--text-muted)">
+                        <strong>Dolor / Freno Oculto:</strong> ${arch.pain}
+                    </div>
+
+                    <div class="strategy-box">
+                        <h4>Estrategia de Abordaje Sugerida</h4>
+                        <p>${arch.strategy}</p>
+                    </div>
+                `;
+            }
+
+            grid.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>

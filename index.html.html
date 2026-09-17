@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Toma de Decisiones en Proyectos</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #6c757d;
+            --accent-blue: #1d4ed8;
+            --accent-blue-hover: #1e40af;
+            --border-color: #e2e8f0;
+            --option-hover: #eff6ff;
+            --option-selected: #dbeafe;
+            --border-selected: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            border-top: 5px solid var(--accent-blue);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        /* ESTILOS DE LA RULETA */
+        .roulette-card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .roulette-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 20px auto;
+        }
+
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 14px solid transparent;
+            border-right: 14px solid transparent;
+            border-top: 22px solid #ef4444;
+            z-index: 10;
+        }
+
+        .spin-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+        }
+
+        .spin-btn:hover {
+            background: #059669;
+        }
+
+        .spin-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .leader-select-box {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .leader-select-box label {
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .leader-select-box select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+            background-color: white;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        /* Ocultar formulario hasta que se sortee */
+        #evaluationForm {
+            display: none;
+        }
+
+        .scenario-card {
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .scenario-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #e0e7ff;
+            color: #3730a3;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 20px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .scenario-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .scenario-desc {
+            font-size: 14px;
+            color: #475569;
+            background: #f8fafc;
+            padding: 14px;
+            border-left: 4px solid var(--accent-blue);
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .option-label:hover {
+            background-color: var(--option-hover);
+            border-color: #93c5fd;
+        }
+
+        .option-label input[type="radio"] {
+            margin-top: 4px;
+            margin-right: 14px;
+            accent-color: var(--accent-blue);
+            transform: scale(1.1);
+        }
+
+        .option-text {
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.3);
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-blue-hover);
+        }
+
+        .submit-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .alert-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .modal-content h3 {
+            color: #16a34a;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .modal-content p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .modal-btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .nav-bim-link {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+        }
+
+        .nav-bim-link a {
+            color: #94a3b8;
+            text-decoration: none;
+        }
+        
+        .nav-bim-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Simulador de Toma de Decisiones en Proyectos</h1>
+        <p>En la práctica diaria, la gestión simultánea de 2 a 4 proyectos en distintas fases exige tomar decisiones complejas bajo presión. No existen respuestas correctas o incorrectas. Selecciona la opción que mejor describa tu criterio habitual de actuación ante cada uno de los escenarios.</p>
+    </div>
+
+    <!-- SECCIÓN DE LA RULETA -->
+    <div class="roulette-card" id="rouletteSection">
+        <h2>Sorteo de Perfil de Líder</h2>
+        <p style="font-size: 14px; color: var(--text-muted); margin-top: 5px;">Gira la ruleta para obtener el número de líder que te corresponde evaluar.</p>
+        
+        <div class="roulette-container">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas" width="300" height="300"></canvas>
+        </div>
+
+        <button class="spin-btn" id="spinBtn" onclick="spinWheel()">¡Girar Ruleta!</button>
+
+        <div class="leader-select-box" style="margin-top:20px;">
+            <label for="leaderSelect">Perfil Asignado:</label>
+            <select id="leaderSelect" disabled>
+                <option value="" disabled selected>-- Esperando sorteo --</option>
+                <option value="Líder 1 - Arquitectura">Líder 1 - Arquitectura</option>
+                <option value="Líder 2 - Arquitectura">Líder 2 - Arquitectura</option>
+                <option value="Líder 3 - Arquitectura">Líder 3 - Arquitectura</option>
+                <option value="Líder 4 - Arquitectura">Líder 4 - Arquitectura</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- FORMULARIO DE EVALUACIÓN -->
+    <form id="evaluationForm">
+        <input type="hidden" id="lider_id" name="lider_id">
+
+        <!-- Escenario 1 -->
+        <div class="scenario-card">
+            <span class="scenario-tag">Escenario 1 · Concurso / Licitación</span>
+            <div class="scenario-title">Alta velocidad vs. Calidad de información</div>
+            <div class="scenario-desc">
+                Estás coordinando la entrega de una propuesta conceptual/técnica para un concurso clave. El tiempo es extremadamente ajustado, pero la precisión de cuantificaciones y la claridad del proyecto son determinantes. El equipo atiende otros 3 proyectos en desarrollo.
+            </div>
+            <div class="options-group">
+                <label class="option-label">
+                    <input type="radio" name="e1" value="A" required>
+                    <span class="option-text"><strong>A)</strong> Priorizo la velocidad de representación gráfica y armado de láminas mediante herramientas 2D/3D rápidas, calculando/estimando cuantificaciones por ratios para cumplir a tiempo el hito.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e1" value="B">
+                    <span class="option-text"><strong>B)</strong> Solicito que el modelo 3D base esté estructurado con precisión paramétrica suficiente para extraer volúmenes y datos reales directamente de la maqueta, aunque implique recortar el nivel de detalle visual.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e1" value="C">
+                    <span class="option-text"><strong>C)</strong> Distribuyo el trabajo pidiendo a un proyectista que arme la presentación gráfica rápida por su cuenta, mientras otro integra los datos técnicos en paralelo sin depender 100% de la maqueta central.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e1" value="D">
+                    <span class="option-text"><strong>D)</strong> Me involucro directamente en la edición técnica del entregable para acelerar la salida, reduciendo los tiempos de revisión y delegación con el equipo.</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Escenario 2 -->
+        <div class="scenario-card">
+            <span class="scenario-tag">Escenario 2 · Etapa de Diseño</span>
+            <div class="scenario-title">Cambios iterativos y frecuentes del cliente</div>
+            <div class="scenario-desc">
+                El cliente solicita modificaciones constantes y de fondo semana a semana. Ajustar el modelo 3D integral con todas sus vistas, cortes y familias con cada cambio consume demasiado tiempo y genera retrabajo en el equipo, que tiene entregas de otros proyectos en puerta.
+            </div>
+            <div class="options-group">
+                <label class="option-label">
+                    <input type="radio" name="e2" value="A" required>
+                    <span class="option-text"><strong>A)</strong> Presento las propuestas de cambio al cliente mediante esquemas 2D/DWG o bocetos rápidos para acordar la solución antes de invertir tiempo en actualizar la maqueta 3D central.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e2" value="B">
+                    <span class="option-text"><strong>B)</strong> Mantengo la regla de que cada cambio se modele directamente en la maqueta 3D central antes de mostrarlo, asegurando que el cliente siempre vea el impacto tridimensional y real del ajuste.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e2" value="C">
+                    <span class="option-text"><strong>C)</strong> Actualizo únicamente los elementos generales del modelo 3D para la presentación y complemento los detalles específicos con líneas/anotaciones 2D rápidas sobre la lámina.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e2" value="D">
+                    <span class="option-text"><strong>D)</strong> Establezco cortes de congelamiento de información con el cliente y acumulo varios cambios para procesarlos en el modelo 3D en un solo bloque de trabajo.</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Escenario 3 -->
+        <div class="scenario-card">
+            <span class="scenario-tag">Escenario 3 · Etapa de Construcción</span>
+            <div class="scenario-title">Urgencia de campo / Liberación de frentes</div>
+            <div class="scenario-desc">
+                El residente de obra llama exigiendo la liberación inmediata de un plano corregido por un choque de ingenierías en sitio. El frente de trabajo está detenido. Corregir y validar el modelo 3D toma 3 horas; hacer la corrección directa sobre el plano 2D (DWG/PDF) toma 15 minutos.
+            </div>
+            <div class="options-group">
+                <label class="option-label">
+                    <input type="radio" name="e3" value="A" required>
+                    <span class="option-text"><strong>A)</strong> Modifico o autorizo la edición directa en el plano 2D/PDF para liberar el frente de inmediato a obra, y programo la actualización del modelo 3D para cuando baje la carga de entregas.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e3" value="B">
+                    <span class="option-text"><strong>B)</strong> Solicito la actualización y validación del modelo 3D antes de emitir cualquier plano, asumiendo el costo del tiempo en obra para garantizar la integridad de la base de datos.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e3" value="C">
+                    <span class="option-text"><strong>C)</strong> Envío una nota técnica o marca rápida sobre el plano actual como autorización provisional para obra, registrando el cambio para procesar la emisión formal posteriormente.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e3" value="D">
+                    <span class="option-text"><strong>D)</strong> Pido apoyo inmediato al Coordinador/Especialista BIM de mi equipo para que resuelva la maqueta 3D mientras mi equipo de arquitectura valida la solución técnica en el plano.</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Escenario 4 -->
+        <div class="scenario-card">
+            <span class="scenario-tag">Escenario 4 · Etapa de Cierre / As-Built</span>
+            <div class="scenario-title">Información tardía de obra</div>
+            <div class="scenario-desc">
+                El proyecto está en cierre. Construcción entrega al final una gran cantidad de marcas rojas y cambios acumulados hechos en sitio que no se notificaron a tiempo. El equipo está enfocado en nuevos proyectos y procesar estos cambios se percibe como un proceso lento.
+            </div>
+            <div class="options-group">
+                <label class="option-label">
+                    <input type="radio" name="e4" value="A" required>
+                    <span class="option-text"><strong>A)</strong> Actualizo directamente los planos 2D (DWG) con la información final de obra para cerrar expedientes y carpetas LPI lo más rápido posible.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e4" value="B">
+                    <span class="option-text"><strong>B)</strong> Asigno recursos para modelar en 3D cada modificación realizada en sitio, garantizando que el modelo As-Built refleje exactamente lo construido antes de cerrar el proyecto.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e4" value="C">
+                    <span class="option-text"><strong>C)</strong> Valido únicamente las modificaciones estructurales o arquitectónicas mayores en el modelo 3D, y los cambios menores de detalle los plasmo directamente en la documentación 2D.</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="e4" value="D">
+                    <span class="option-text"><strong>D)</strong> Negocio con el equipo de Construcción para que ellos capturen o validen primero los cambios en la plataforma colaborativa antes de que Arquitectura absorba el trabajo de dibujo/modelado.</span>
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Guardar y Finalizar Evaluación</button>
+    </form>
+
+    <div class="nav-bim-link">
+        <a href="resultados_bim.html">Acceso exclusivo Equipo BIM</a>
+    </div>
+</div>
+
+<div class="alert-modal" id="successModal">
+    <div class="modal-content">
+        <h3>¡Evaluación Registrada!</h3>
+        <p>Tus respuestas han sido guardadas correctamente en el sistema. Agradecemos tu participación para la optimización de los flujos de trabajo.</p>
+        <button class="modal-btn" onclick="closeModal()">Aceptar</button>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwK5u5eWebHhjdFOVV9xQP7y8gAHm9DY0_hw5oMhH-4NFmOla_YA98xKRuHUKc1X8SX/exec";
+
+    const allLeaders = [
+        "Líder 1 - Arquitectura",
+        "Líder 2 - Arquitectura",
+        "Líder 3 - Arquitectura",
+        "Líder 4 - Arquitectura"
+    ];
+    
+    let availableLeaders = [...allLeaders];
+    let remoteData = {};
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"];
+    
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    let startAngle = 0;
+    let isSpinning = false;
+
+    async function loadRemoteData() {
+        try {
+            const resp = await fetch(SCRIPT_URL);
+            remoteData = await resp.json();
+            
+            availableLeaders = allLeaders.filter(leader => !remoteData[leader]);
+            updateLeaderOptions();
+            drawWheel();
+        } catch (err) {
+            console.error("Error al conectar con Google Sheets:", err);
+            drawWheel();
+        }
+    }
+
+    function drawWheel() {
+        const numOptions = availableLeaders.length;
+
+        if (numOptions === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#64748b";
+            ctx.font = "bold 16px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("¡Todos los líderes", canvas.width / 2, canvas.height / 2 - 10);
+            ctx.fillText("han sido evaluados!", canvas.width / 2, canvas.height / 2 + 15);
+            document.getElementById('spinBtn').disabled = true;
+            return;
+        }
+
+        const arc = (2 * Math.PI) / numOptions;
+        const radius = canvas.width / 2;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < numOptions; i++) {
+            const angle = startAngle + i * arc;
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.beginPath();
+            ctx.arc(radius, radius, radius, angle, angle + arc, false);
+            ctx.lineTo(radius, radius);
+            ctx.fill();
+
+            // Dibujar Texto
+            ctx.save();
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 14px sans-serif";
+            ctx.translate(radius + Math.cos(angle + arc / 2) * (radius - 50), radius + Math.sin(angle + arc / 2) * (radius - 50));
+            ctx.rotate(angle + arc / 2 + Math.PI / 2);
+            const shortName = availableLeaders[i].replace(" - Arquitectura", "");
+            ctx.fillText(shortName, -ctx.measureText(shortName).width / 2, 0);
+            ctx.restore();
+        }
+    }
+
+    function spinWheel() {
+        if (isSpinning || availableLeaders.length === 0) return;
+        
+        isSpinning = true;
+        document.getElementById('spinBtn').disabled = true;
+
+        const spinAngleStart = Math.random() * 10 + 10;
+        let spinTime = 0;
+        const spinTimeTotal = Math.random() * 3000 + 4000;
+
+        function rotate() {
+            spinTime += 30;
+            if (spinTime >= spinTimeTotal) {
+                stopRotate();
+                return;
+            }
+            const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+            startAngle += (spinAngle * Math.PI / 180);
+            drawWheel();
+            requestAnimationFrame(rotate);
+        }
+        rotate();
+    }
+
+    function stopRotate() {
+        isSpinning = false;
+        const numOptions = availableLeaders.length;
+        const arc = (2 * Math.PI) / numOptions;
+
+        let degrees = (startAngle * 180 / Math.PI) % 360;
+        let arcd = (arc * 180 / Math.PI);
+        let index = Math.floor((360 - (degrees % 360) + 270) % 360 / arcd);
+
+        const winner = availableLeaders[index];
+
+        const leaderSelect = document.getElementById('leaderSelect');
+        leaderSelect.value = winner;
+
+        document.getElementById('evaluationForm').style.display = 'block';
+        document.getElementById('evaluationForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function easeOut(t, b, c, d) {
+        const ts = (t /= d) * t;
+        const tc = ts * t;
+        return b + c * (tc + -3 * ts + 3 * t);
+    }
+
+    function updateLeaderOptions() {
+        const leaderSelect = document.getElementById('leaderSelect');
+        
+        Array.from(leaderSelect.options).forEach(option => {
+            if (option.value && remoteData[option.value]) {
+                option.disabled = true;
+                if (!option.text.includes('(Completado)')) {
+                    option.text += ' (Completado)';
+                }
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadRemoteData();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const idLider = urlParams.get('id');
+        if (idLider) {
+            document.getElementById('lider_id').value = idLider;
+        } else {
+            document.getElementById('lider_id').value = 'Anonimo_o_Sin_ID';
+        }
+    });
+
+    document.getElementById('evaluationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const leaderSelect = document.getElementById('leaderSelect');
+        const selectedLeader = leaderSelect.value;
+
+        if (!selectedLeader) {
+            alert("Por favor selecciona tu perfil de Líder antes de enviar.");
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Guardando respuestas...";
+
+        const formData = {
+            leader: selectedLeader,
+            timestamp: new Date().toLocaleString(),
+            answers: {
+                e1: document.querySelector('input[name="e1"]:checked').value,
+                e2: document.querySelector('input[name="e2"]:checked').value,
+                e3: document.querySelector('input[name="e3"]:checked').value,
+                e4: document.querySelector('input[name="e4"]:checked').value
+            }
+        };
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            });
+
+            document.getElementById('successModal').style.display = 'flex';
+        } catch (err) {
+            alert("Ocurrió un error al guardar. Intenta nuevamente.");
+            console.error(err);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Guardar y Finalizar Evaluación";
+        }
+    });
+
+    function closeModal() {
+        document.getElementById('successModal').style.display = 'none';
+        document.getElementById('evaluationForm').reset();
+        document.getElementById('evaluationForm').style.display = 'none';
+        document.getElementById('leaderSelect').value = "";
+        document.getElementById('spinBtn').disabled = false;
+        
+        loadRemoteData();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
